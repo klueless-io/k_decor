@@ -21,6 +21,7 @@ group :green_pass_then_cop, halt_on_fail: true do
     dsl.watch_spec_files_for(ruby.lib_files)
     watch(%r{^lib/k_decor/(.+)\.rb$}) { |m| "spec/unit/#{m[1]}_spec.rb" }
     watch(%r{^lib/k_decor/commands/(.+)\.rb$}) { |m| "spec/unit/commands/#{m[1]}_spec.rb" }
+    watch(%r{^spec/mocks/(.+)\.rb$}) { |_m| 'spec/k_decor/base_decorator_spec.rb' }
   end
 
   guard :rubocop, all_on_start: false, cli: ['--format', 'clang'] do
