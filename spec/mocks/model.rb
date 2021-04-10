@@ -7,10 +7,22 @@ class Model
 
   def initialize(name = nil, **params)
     @model = name
-    params.each { |key, value| send("#{key}=", value) }
+    @params = params
+    @params.each { |key, value| send("#{key}=", value) }
   end
 
   def touched
     @touch = true
+  end
+
+  def to_h
+    result = {
+      model: @model,
+      model_plural: @model_plural,
+      touch: @touch
+    }
+    ps = @params.map { |key, _value| [key, send("#{key}")] }
+    ps.each { |current| key, value = current.first; result[key] = value }
+    result
   end
 end
