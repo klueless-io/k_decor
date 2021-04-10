@@ -10,36 +10,25 @@ module KDecor
     # is suitable for processing
     attr_accessor :compatible_type
 
-    # What behaviours are available to this decorator, any base decorator
-    # may be called from multiple places with slightly different behaviours.
+    # What are the specific behaviours available on this decorator
     #
-    # These behaviours can be listed on the base class and they provide
-    # some safety against calling child decorators incorrectly.
-    attr_accessor :available_behaviours
-
-    # What are the specific behaviours of this decorator
-    #
-    # If you wish to use a decorator to run against a compatible data type
-    # and not worry about what method fired the decorator then leave
-    # the behaviour as :all
+    # If you wish to use a decorator to run against a compatible data
+    # type you do not need individual behaviours then set
+    # implemented_behaviours to [:default]
     #
     # But if this decorator type only targets certain behaviours then give it a
-    # specific :behaviour to perform. e.g. KDecor::TableDecorator can
-    # be responsible for updating rows, fields or both.
+    # list of specific :behaviour to perform. e.g. [:update_fields, :update_rows]
     attr_accessor :implemented_behaviours
 
     def initialize(compatible_type)
       @compatible_type = compatible_type
-      @available_behaviours = [:default]
       @implemented_behaviours = []
     end
 
     # Does the decorator implement the behaviour
     # , any = false)
     def behaviour?(behaviour)
-      # (any == true && behaviours.include?(:all)) ||
-      behaviours.include?(behaviour)
-      # required_behaviours.any? { |required_behaviour| behaviours.include?(required_behaviour) }
+      behaviour == :all || implemented_behaviours.include?(behaviour)
     end
 
     def compatible?(target)

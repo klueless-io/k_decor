@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class ModelAlterNamesDecorator < ModelDecorator
+class AlterNamesModelDecorator < ModelDecorator
   def update(target, **_opts)
     # target.respond_to?(:first_name) - need to work out what to do when working with account which does not have first_name, lastname
 
