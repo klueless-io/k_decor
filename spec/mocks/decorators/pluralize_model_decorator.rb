@@ -2,7 +2,7 @@
 
 require 'mocks/model'
 
-class ModelPluralizeDecorator < ModelDecorator
+class PluralizeModelDecorator < ModelDecorator
   def update(target, **opts)
     super(target, **opts)
 

@@ -2,7 +2,7 @@
 
 require 'mocks/model'
 
-class ModelTodoDecorator < KDecor::BaseDecorator
+class TodoModelDecorator < KDecor::BaseDecorator
   def initialize
     super(Model)
   end

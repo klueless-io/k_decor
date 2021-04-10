@@ -1,22 +1,26 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-
+require 'json'
 # require 'active_support/core_ext/string'
 
 require 'mocks/model'
 require 'mocks/model_account'
 require 'mocks/model_person'
+require 'mocks/decorators/composite/people_model_decorator'
 require 'mocks/decorators/model_decorator'
-require 'mocks/decorators/model_pluralize_decorator'
-require 'mocks/decorators/model_todo_decorator'
-require 'mocks/decorators/model_alter_names_decorator'
-require 'mocks/decorators/model_add_full_name_decorator'
+require 'mocks/decorators/pluralize_model_decorator'
+require 'mocks/decorators/todo_model_decorator'
+require 'mocks/decorators/alter_names_model_decorator'
+require 'mocks/decorators/add_full_name_model_decorator'
+require 'mocks/decorators/add_first_last_name_model_decorator'
 
 # require 'mocks/decorators/set_db_type_table_decorator'
 # require 'mocks/decorators/set_entity_fields_table_decorator'
 
 RSpec.describe KDecor::BaseDecorator do
+  include KLog::Logging
+
   let(:data) { {} }
   let(:data_account) { ModelAccount.new }
   let(:data_person) { ModelPerson.new }
@@ -49,6 +53,7 @@ RSpec.describe KDecor::BaseDecorator do
                                        first_name: 'David',
                                        last_name: 'Cruwys')
       }
+      # fit { log.json(subject.to_h) }
     end
     context 'ModelPerson - John' do
       subject { data_person_john }
@@ -76,12 +81,6 @@ RSpec.describe KDecor::BaseDecorator do
         it { is_expected.to eq(Object) }
       end
 
-      context '.available_behaviours' do
-        subject { decorator.available_behaviours }
-
-        it { is_expected.to eq([:default]) }
-      end
-
       context '.implemented_behaviours' do
         subject { decorator.implemented_behaviours }
 
@@ -100,17 +99,30 @@ RSpec.describe KDecor::BaseDecorator do
         it { is_expected.to eq(Model) }
       end
 
-      context '.available_behaviours' do
-        subject { decorator.available_behaviours }
-
-        it { is_expected.to eq([:default]) }
-      end
-
       context '.implemented_behaviours' do
         subject { decorator.implemented_behaviours }
 
         it { is_expected.to eq([:default]) }
       end
+
+      context '.behaviour?' do
+        context 'when specific behaviour is implemented' do
+          subject { decorator.behaviour?(:default) }
+
+          it { is_expected.to be_truthy }
+        end
+        context 'when :all override is supplied' do
+          subject { decorator.behaviour?(:all) }
+
+          it { is_expected.to be_truthy }
+        end
+        context 'when specific behaviour is not implemented' do
+          subject { decorator.behaviour?(:unknown) }
+
+          it { is_expected.to be_falsey }
+        end
+      end
+
     end
   end
 
@@ -168,9 +180,9 @@ RSpec.describe KDecor::BaseDecorator do
 
     context 'when decorator has not implemented an update method' do
       let(:data) { Model.new }
-      let(:decorator) { ModelTodoDecorator.new }
+      let(:decorator) { TodoModelDecorator.new }
 
-      it { expect { subject }.to raise_error(KType::Error, 'ModelTodoDecorator has not implemented an update method') }
+      it { expect { subject }.to raise_error(KType::Error, 'TodoModelDecorator has not implemented an update method') }
     end
 
     context 'when data is compatible' do
@@ -181,7 +193,7 @@ RSpec.describe KDecor::BaseDecorator do
     end
   end
 
-  context 'simple decorators having behaviour: :default' do
+  context 'simple decorators' do
     subject { decorator.decorate(data) }
 
     context 'when ModelAccount is decorated by ModelDecorator' do
@@ -195,8 +207,8 @@ RSpec.describe KDecor::BaseDecorator do
       }
     end
 
-    context 'when ModelAccount is decorated by ModelPluralizeDecorator' do
-      let(:decorator) { ModelPluralizeDecorator.new }
+    context 'when ModelAccount is decorated by PluralizeModelDecorator' do
+      let(:decorator) { PluralizeModelDecorator.new }
 
       let(:data) { data_account }
 
@@ -207,8 +219,8 @@ RSpec.describe KDecor::BaseDecorator do
       end
     end
 
-    context 'when ModelPersonDavid is decorated by ModelAlterNamesDecorator' do
-      let(:decorator) { ModelAlterNamesDecorator.new }
+    context 'when ModelPersonDavid is decorated by AlterNamesModelDecorator' do
+      let(:decorator) { AlterNamesModelDecorator.new }
 
       let(:data) { data_person_david }
 
@@ -220,8 +232,8 @@ RSpec.describe KDecor::BaseDecorator do
       }
     end
 
-    context 'when ModelPersonData is decorated by ModelAddFullNameDecorator' do
-      let(:decorator) { ModelAddFullNameDecorator.new }
+    context 'when ModelPersonData is decorated by AddFullNameModelDecorator' do
+      let(:decorator) { AddFullNameModelDecorator.new }
 
       let(:data) { data_person_david }
 
@@ -235,16 +247,162 @@ RSpec.describe KDecor::BaseDecorator do
     end
   end
 
-  # The following simple decorator should be wrapped up in a complex behaviour 
-  # context 'simple decorators that exhibit complex behaviour' do
+  # The following simple decorator should be wrapped up in a complex behaviours
+  context 'simple decorators that exhibit complex behaviour' do
+    subject { decorator.decorate(data) }
 
-  #   context 'when decorator is compatible_with data class, but not this particular sub_class' do
-  #     let(:decorator) { ModelAddFullNameDecorator.new }
+    context 'when decorator is compatible_with data type, but incompatible with the fields on the sub_class' do
+      let(:decorator) { AddFullNameModelDecorator.new }
 
-  #     let(:data) { data_account }
+      let(:data) { data_account }
 
-  #     it { expect { subject }.to raise_error }
-  #   end
+      it { expect { subject }.to raise_error(NoMethodError) }
 
+      context 'make fields on sub_class compatible using AddFirstLastNameModelDecorator' do
+        let(:decorator) { AddFirstLastNameModelDecorator.new }
+  
+        let(:data) { data_account }
+  
+        it {
+          is_expected.to have_attributes(model: 'Account',
+                                         touch: nil,
+                                         first_name: nil,
+                                         last_name: nil)
+        }
+
+        context 'now that fields are compatible, use the previously incompatible decorator' do
+          let(:decorator) { AddFullNameModelDecorator.new }
+
+          before {
+            data.first_name = 'First'
+            data.last_name = 'Last'
+          }
+
+          it {
+            is_expected.to have_attributes(model: 'Account',
+            touch: nil,
+            first_name: 'First',
+            last_name: 'Last',
+            full_name: 'First Last')
+          }
+        end       
+      end
+    end
+  end
+
+  # context 'ModelPerson - John' do
+  #   subject { data_person_john }
+  #   it {
+  #     is_expected.to have_attributes(model: 'Person',
+  #                                    model_plural: nil,
+  #                                    touch: nil,
+  #                                    first_name: 'John',
+  #                                    last_name: 'Doe')
+  #   }
   # end
+
+  context 'complex/composite decorators' do
+    subject { decorator.decorate(data, behaviour: behaviour) }
+
+    context 'using the people model decorator' do
+      let(:decorator) { PeopleModelDecorator.new }
+
+      context 'with all behaviours' do
+        let(:behaviour) { :all }
+
+        context 'for david' do
+          let(:data) { data_person_david }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: 'Persons',
+              touch: true,
+              first_name: 'Dave',
+              last_name: 'was here')
+          }
+        end
+        
+        context 'for john' do
+          let(:data) { data_person_john }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: 'Persons',
+              touch: true,
+              first_name: 'John',
+              last_name: 'Doe')
+          }
+        end
+      end
+
+      context 'with one behaviour: :alter_names' do
+        let(:behaviour) { :alter_names }
+
+        context 'for david' do
+          let(:data) { data_person_david }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: nil,
+              touch: nil,
+              first_name: 'Dave',
+              last_name: 'was here')
+          }
+        end
+        
+        context 'for john' do
+          let(:data) { data_person_john }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: nil,
+              touch: nil,
+              first_name: 'John',
+              last_name: 'Doe')
+          }
+        end
+      end
+
+      context 'with chained behaviours [:touch, :pluralize, :alter_names, :add_full_name]' do
+        subject { data }
+
+        let(:behaviours) { [:touch, :pluralize, :alter_names, :add_full_name] }
+
+        before {
+          behaviours.each { |behaviour| decorator.decorate(data, behaviour: behaviour) }
+        }
+
+        context 'for david' do
+          let(:data) { data_person_david }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: 'Persons',
+              touch: true,
+              first_name: 'Dave',
+              last_name: 'was here')
+          }
+        end
+        
+        context 'for john' do
+          let(:data) { data_person_john }
+
+          it {
+            is_expected.to have_attributes(
+              model: 'Person',
+              model_plural: 'Persons',
+              touch: true,
+              first_name: 'John',
+              last_name: 'Doe')
+          }
+        end
+      end
+
+    end
+  end
 end
