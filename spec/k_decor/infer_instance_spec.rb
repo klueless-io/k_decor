@@ -33,4 +33,3 @@ RSpec.describe KDecor::ResolveInstance do
     end
   end
 end
-# it { is_expected.to have_attributes(model: 'Person', model_plural: 'Persons') }
