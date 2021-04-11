@@ -31,11 +31,24 @@ module KDecor
       end.compact
     end
 
-    def run_decorators(decorators, data, behaviour: :default)
-      decorators.map do |decorator|
-        decorator.decorate(data, behaviour: behaviour)
+    # Run a list of decorators against the data
+    def decorate(data, *decorators, behaviour: :default, behaviours: [])
+      if behaviours.length.zero?
+        decorators.map do |decorator|
+          decorator.decorate(data, behaviour: behaviour)
+        end
+      else
+        behaviours.each do |behave|
+          decorators.map do |decorator|
+            decorator.decorate(data, behaviour: behave)
+          end
+        end
       end
       data
     end
+
+    # decorate(data, [](:plural, PluralizeModelDecorator)
+    # config.register_decorator(:plural_configured, PluralizeModelDecorator.new('Person' => 'People'))
+    # config.register_decorator(:people, PeopleModelDecorator)
   end
 end
