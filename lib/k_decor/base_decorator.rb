@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'delegate'
 module KDecor
   # Base decorator
   class BaseDecorator

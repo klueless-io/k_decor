@@ -4,16 +4,7 @@ require 'spec_helper'
 require 'json'
 # require 'active_support/core_ext/string'
 
-require 'mocks/model'
-require 'mocks/model_account'
-require 'mocks/model_person'
-require 'mocks/decorators/composite/people_model_decorator'
-require 'mocks/decorators/model_decorator'
-require 'mocks/decorators/pluralize_model_decorator'
-require 'mocks/decorators/todo_model_decorator'
-require 'mocks/decorators/alter_names_model_decorator'
-require 'mocks/decorators/add_full_name_model_decorator'
-require 'mocks/decorators/add_first_last_name_model_decorator'
+require 'mocks/decorators/_'
 
 # require 'mocks/decorators/set_db_type_table_decorator'
 # require 'mocks/decorators/set_entity_fields_table_decorator'
@@ -122,7 +113,6 @@ RSpec.describe KDecor::BaseDecorator do
           it { is_expected.to be_falsey }
         end
       end
-
     end
   end
 
@@ -260,9 +250,9 @@ RSpec.describe KDecor::BaseDecorator do
 
       context 'make fields on sub_class compatible using AddFirstLastNameModelDecorator' do
         let(:decorator) { AddFirstLastNameModelDecorator.new }
-  
+
         let(:data) { data_account }
-  
+
         it {
           is_expected.to have_attributes(model: 'Account',
                                          touch: nil,
@@ -273,33 +263,22 @@ RSpec.describe KDecor::BaseDecorator do
         context 'now that fields are compatible, use the previously incompatible decorator' do
           let(:decorator) { AddFullNameModelDecorator.new }
 
-          before {
+          before do
             data.first_name = 'First'
             data.last_name = 'Last'
-          }
+          end
 
           it {
             is_expected.to have_attributes(model: 'Account',
-            touch: nil,
-            first_name: 'First',
-            last_name: 'Last',
-            full_name: 'First Last')
+                                           touch: nil,
+                                           first_name: 'First',
+                                           last_name: 'Last',
+                                           full_name: 'First Last')
           }
-        end       
+        end
       end
     end
   end
-
-  # context 'ModelPerson - John' do
-  #   subject { data_person_john }
-  #   it {
-  #     is_expected.to have_attributes(model: 'Person',
-  #                                    model_plural: nil,
-  #                                    touch: nil,
-  #                                    first_name: 'John',
-  #                                    last_name: 'Doe')
-  #   }
-  # end
 
   context 'complex/composite decorators' do
     subject { decorator.decorate(data, behaviour: behaviour) }
@@ -319,10 +298,11 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: 'Persons',
               touch: true,
               first_name: 'Dave',
-              last_name: 'was here')
+              last_name: 'was here'
+            )
           }
         end
-        
+
         context 'for john' do
           let(:data) { data_person_john }
 
@@ -332,7 +312,8 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: 'Persons',
               touch: true,
               first_name: 'John',
-              last_name: 'Doe')
+              last_name: 'Doe'
+            )
           }
         end
       end
@@ -349,10 +330,11 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: nil,
               touch: nil,
               first_name: 'Dave',
-              last_name: 'was here')
+              last_name: 'was here'
+            )
           }
         end
-        
+
         context 'for john' do
           let(:data) { data_person_john }
 
@@ -362,7 +344,8 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: nil,
               touch: nil,
               first_name: 'John',
-              last_name: 'Doe')
+              last_name: 'Doe'
+            )
           }
         end
       end
@@ -370,11 +353,11 @@ RSpec.describe KDecor::BaseDecorator do
       context 'with chained behaviours [:touch, :pluralize, :alter_names, :add_full_name]' do
         subject { data }
 
-        let(:behaviours) { [:touch, :pluralize, :alter_names, :add_full_name] }
+        let(:behaviours) { %i[touch pluralize alter_names add_full_name] }
 
-        before {
+        before do
           behaviours.each { |behaviour| decorator.decorate(data, behaviour: behaviour) }
-        }
+        end
 
         context 'for david' do
           let(:data) { data_person_david }
@@ -385,10 +368,11 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: 'Persons',
               touch: true,
               first_name: 'Dave',
-              last_name: 'was here')
+              last_name: 'was here'
+            )
           }
         end
-        
+
         context 'for john' do
           let(:data) { data_person_john }
 
@@ -398,11 +382,11 @@ RSpec.describe KDecor::BaseDecorator do
               model_plural: 'Persons',
               touch: true,
               first_name: 'John',
-              last_name: 'Doe')
+              last_name: 'Doe'
+            )
           }
         end
       end
-
     end
   end
 end
