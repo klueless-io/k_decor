@@ -38,8 +38,8 @@ RSpec.describe KDecor::Helper do
     end
   end
 
-  describe '#run_decorators' do
-    subject { instance.run_decorators(decorators, data, behaviour: behaviour) }
+  describe '#decorate' do
+    subject { instance.decorate(data, *decorators, behaviour: behaviour) }
 
     let(:data) { ModelPerson.new(first_name: 'David', last_name: 'Cruwys') }
     let(:decorators) { instance.resolve_decorators(decorator_list) }
@@ -70,6 +70,14 @@ RSpec.describe KDecor::Helper do
         let(:behaviour) { :add_full_name }
 
         it { is_expected.to have_attributes(model: 'Person', model_plural: nil, touch: nil, first_name: 'David', last_name: 'Cruwys', full_name: 'David Cruwys') }
+      end
+
+      context 'when using multiple behaviours' do
+        subject { instance.decorate(data, *decorators, behaviours: behaviours) }
+
+        let(:behaviours) { %i[pluralize alter_names add_full_name] }
+
+        it { is_expected.to have_attributes(model: 'Person', model_plural: 'Persons', touch: nil, first_name: 'Dave', last_name: 'was here', full_name: 'Dave was here') }
       end
     end
   end
