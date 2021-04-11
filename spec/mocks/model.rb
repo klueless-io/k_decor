@@ -21,8 +21,11 @@ class Model
       model_plural: @model_plural,
       touch: @touch
     }
-    ps = @params.map { |key, _value| [key, send("#{key}")] }
-    ps.each { |current| key, value = current.first; result[key] = value }
+    ps = @params.map { |key, _value| [key, send(key.to_s)] }
+    ps.each do |current|
+      key, value = current.first
+      result[key] = value
+    end
     result
   end
 end
