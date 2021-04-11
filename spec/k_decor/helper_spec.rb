@@ -45,23 +45,32 @@ RSpec.describe KDecor::Helper do
     let(:decorators) { instance.resolve_decorators(decorator_list) }
     let(:behaviour) { :default }
 
-    context 'when run :plural' do
+    context 'when :plural' do
       let(:decorator_list) { [:plural] }
 
       it { is_expected.to have_attributes(model: 'Person', model_plural: 'Persons') }
     end
 
-    context 'when run configured instance class' do
+    context 'when configured instance class' do
       let(:decorator_list) { [PluralizeModelDecorator.new('Person' => 'People')] }
 
       it { is_expected.to have_attributes(model: 'Person', model_plural: 'People') }
     end
 
-    context 'when run configured instance class' do
+    context 'when composite class type' do
       let(:decorator_list) { [PeopleModelDecorator] }
-      let(:behaviour) { :all }
 
-      it { is_expected.to have_attributes(model: 'Person', model_plural: 'Persons', touch: true, first_name: 'Dave', last_name: 'was here') }
+      context 'with behaviour: all' do
+        let(:behaviour) { :all }
+
+        it { is_expected.to have_attributes(model: 'Person', model_plural: 'Persons', touch: true, first_name: 'Dave', last_name: 'was here', full_name: 'Dave was here') }
+      end
+
+      context 'with behaviour: add_full_name' do
+        let(:behaviour) { :add_full_name }
+
+        it { is_expected.to have_attributes(model: 'Person', model_plural: nil, touch: nil, first_name: 'David', last_name: 'Cruwys', full_name: 'David Cruwys') }
+      end
     end
   end
 end

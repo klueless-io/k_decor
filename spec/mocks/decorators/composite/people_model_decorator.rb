@@ -43,6 +43,6 @@ class PeopleModelDecorator < KDecor::BaseDecorator
   end
 
   def add_full_name(target, **opts)
-    AddFirstLastNameModelDecorator.new.decorate(target, **opts)
+    AddFullNameModelDecorator.new.decorate(target, **opts)
   end
 end
