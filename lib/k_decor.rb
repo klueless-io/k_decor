@@ -33,7 +33,7 @@ module KDecor
   KDecor.decorate = KDecor::Helper.new
 end
 
-if ENV['KLUE_DEBUG']&.to_s&.downcase == 'true'
+if ENV.fetch('KLUE_DEBUG', 'false').downcase == 'true'
   namespace = 'KDecor::Version'
   file_path = $LOADED_FEATURES.find { |f| f.include?('k_decor/version') }
   version   = KDecor::VERSION.ljust(9)

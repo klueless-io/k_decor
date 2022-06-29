@@ -32,6 +32,8 @@ module KDecor
     end
 
     # Run a list of decorators against the data
+    #
+    # @param [Decorators] decorators List of decorators
     def decorate(data, *decorators, behaviour: :default, behaviours: [])
       if behaviours.length.zero?
         decorators.map do |decorator|
